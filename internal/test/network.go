@@ -2,6 +2,7 @@ package test
 
 import (
 	"sync"
+	"log"
 
 	"github.com/taurusgroup/multi-party-sig/pkg/party"
 	"github.com/taurusgroup/multi-party-sig/pkg/protocol"
@@ -19,6 +20,7 @@ type Network struct {
 }
 
 func NewNetwork(parties party.IDSlice) *Network {
+	log.Println("[NewNetwork]", parties)
 	closed := make(chan *protocol.Message)
 	close(closed)
 	c := &Network{
@@ -30,6 +32,7 @@ func NewNetwork(parties party.IDSlice) *Network {
 }
 
 func (n *Network) init() {
+	log.Println("[Network.init]", n.parties)
 	N := len(n.parties)
 	for _, id := range n.parties {
 		n.listenChannels[id] = make(chan *protocol.Message, N*N)
@@ -38,6 +41,7 @@ func (n *Network) init() {
 }
 
 func (n *Network) Next(id party.ID) <-chan *protocol.Message {
+	//log.Println("[Network.Next] enter", id)
 	n.mtx.Lock()
 	defer n.mtx.Unlock()
 	if len(n.listenChannels) == 0 {
@@ -45,8 +49,10 @@ func (n *Network) Next(id party.ID) <-chan *protocol.Message {
 	}
 	c, ok := n.listenChannels[id]
 	if !ok {
+		//log.Println("[Network.Next] leave", id)
 		return n.closedListenChan
 	}
+	//log.Println("[Network.Next] leave", id)
 	return c
 }
 
@@ -55,6 +61,7 @@ func (n *Network) Send(msg *protocol.Message) {
 	defer n.mtx.Unlock()
 	for id, c := range n.listenChannels {
 		if msg.IsFor(id) && c != nil {
+			log.Println("[Network.Send]", msg, "sent to:", id)
 			n.listenChannels[id] <- msg
 		}
 	}
@@ -74,6 +81,7 @@ func (n *Network) Done(id party.ID) chan struct{} {
 }
 
 func (n *Network) Quit(id party.ID) {
+	log.Println("[Network.Quit]", id)
 	n.mtx.Lock()
 	defer n.mtx.Unlock()
 	n.parties = n.parties.Remove(id)

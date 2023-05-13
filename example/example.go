@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"log"
 
 	"github.com/taurusgroup/multi-party-sig/internal/test"
 	"github.com/taurusgroup/multi-party-sig/pkg/ecdsa"
@@ -198,7 +199,7 @@ func All(id party.ID, ids party.IDSlice, threshold int, message []byte, n *test.
 	if err != nil {
 		return err
 	}
-
+/*
 	// FROST KEYGEN
 	frostResult, err := FrostKeygen(id, ids, threshold, n)
 	if err != nil {
@@ -210,7 +211,7 @@ func All(id party.ID, ids party.IDSlice, threshold int, message []byte, n *test.
 	if err != nil {
 		return err
 	}
-
+*/
 	signers := ids[:threshold+1]
 	if !signers.Contains(id) {
 		n.Quit(id)
@@ -235,6 +236,7 @@ func All(id party.ID, ids party.IDSlice, threshold int, message []byte, n *test.
 		return err
 	}
 
+/*
 	// FROST SIGN
 	err = FrostSign(frostResult, id, message, signers, n)
 	if err != nil {
@@ -246,15 +248,21 @@ func All(id party.ID, ids party.IDSlice, threshold int, message []byte, n *test.
 	if err != nil {
 		return err
 	}
-
+*/
 	return nil
 }
 
 func main() {
 
-	ids := party.IDSlice{"a", "b", "c", "d", "e", "f"}
-	threshold := 4
+	log.Println("[Main] init")
+
+	ids := party.IDSlice{"a", "b", "c"}
+	threshold := 2
 	messageToSign := []byte("hello")
+
+	log.Println("[Main] parties:", ids)
+	log.Println("[Main] threshold:", threshold)
+	log.Println("[Main] message:", messageToSign)
 
 	net := test.NewNetwork(ids)
 
@@ -270,4 +278,6 @@ func main() {
 		}(id)
 	}
 	wg.Wait()
+
+	log.Println("[Main] fini")
 }
